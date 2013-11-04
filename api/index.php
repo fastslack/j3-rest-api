@@ -47,6 +47,10 @@ if (file_exists( JPATH_LIBRARIES . '/import.php'))
 }
 
 // Ensure that required path constants are defined.
+if (!defined('JPATH_ROOT'))
+{
+	define('JPATH_ROOT', realpath(dirname(__DIR__)));
+}
 if (!defined('JPATH_BASE'))
 {
 	define('JPATH_BASE', realpath(dirname(__DIR__)));
@@ -58,6 +62,10 @@ if (!defined('JPATH_SITE'))
 if (!defined('JPATH_ADMINISTRATOR'))
 {
 	define('JPATH_ADMINISTRATOR', $JAPIHOME . '/administrator');
+}
+if (!defined('JPATH_COMPONENTS'))
+{
+	define('JPATH_COMPONENTS', $JAPIHOME . '/components');
 }
 if (!defined('JPATH_CACHE'))
 {

@@ -6,7 +6,7 @@
  * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
-class ComponentContentArticlesGet extends ApiControllerItem
+class ComponentContentArticlesCreate extends ApiControllerItem
 {
 	/**
 	 * Constructor.
@@ -27,41 +27,54 @@ class ComponentContentArticlesGet extends ApiControllerItem
 			'describedBy' => 'http://docs.joomla.org/Schemas/articles/v1',
 			'primaryRel'  => 'joomla:articles',
 			'resourceMap' => __DIR__ . '/resource.json',
-			'self' 		  => '/joomla:articles/' . (int) $this->input->get('id'),
 			'tableName'   => '#__content',
+			'tableClass'  => 'Content',
 		);
 
 		$this->setOptions($serviceOptions);
 	}
 
 	/**
-	 * Get database query.
-	 *
-	 * May be overridden in child classes.
-	 *
-	 * @param  string  $table  Primary table name.
-	 *
-	 * @return JDatabaseDriver object.
+	 * Execute the request.
 	 */
-	public function getQuery($table)
+	public function execute()
 	{
 		// Get the user
 		$user = $this->app->getIdentity();
 
-		// Get the base query.
-		$query = parent::getQuery($table);
-
-		// Filter by access level.
-		if ($user->guest != 1)
+		// Check if client has permission to post data
+		if ($user->guest == 1)
 		{
-			$groups = implode(',', $user->getAuthorisedViewLevels());
-			$query->where('access IN (' . $groups . ')');
-		}
-		else if ($user->guest == 1)
-		{
-			$query->where('access = 1');
+			header('Status: 400', true, 400);
+
+			$response = array(
+				'error' => 'unauthorized_client',
+				'error_description' => 'The Joomla! credentials are not valid.'
+			);
+
+			echo json_encode($response);
+			exit;
 		}
 
-		return $query;
+		// Get resource item id from input.
+		$data = $this->input->post->getArray();
+
+		// Get service object.
+		$service = $this->getService();
+
+		// Get the resource map
+		$resourceMap = $service->getResourceMap();
+
+		// Transform the data to its internal representation to save
+		$targetData = $resourceMap->toInternal(json_decode($data['_data']));
+
+		// Store the target data
+		$this->postData($targetData);
+
+		// Set the correct header if resource is created
+		header('Status: 201 Created', true, 201);
+
+		exit;
 	}
+
 }

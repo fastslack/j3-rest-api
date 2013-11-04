@@ -39,6 +39,14 @@ class ApiApplicationWeb extends JApplicationWeb
 	protected $maps = array();
 
 	/**
+	 * The client id
+	 *
+	 * @var    int
+	 * @since  3.2
+	 */
+	private $_clientId;
+
+	/**
 	 * The start time for measuring the execution time.
 	 *
 	 * @var    float
@@ -84,6 +92,18 @@ class ApiApplicationWeb extends JApplicationWeb
 	public function getDatabase()
 	{
 		return $this->db;
+	}
+
+	/**
+	 * Gets the client id of the current running application.
+	 *
+	 * @return  integer  A client identifier.
+	 *
+	 * @since   3.2
+	 */
+	public function getClientId()
+	{
+		return $this->_clientId;
 	}
 
 	/**
@@ -189,6 +209,10 @@ class ApiApplicationWeb extends JApplicationWeb
 	public function loadDispatcher(JEventDispatcher $dispatcher = null)
 	{
 		$this->dispatcher = ($dispatcher === null) ? JEventDispatcher::getInstance() : $dispatcher;
+
+		// Load the JPluginHelper class
+		JLoader::register('JPlugin', JPATH_PLATFORM . '/cms/plugin/plugin.php');
+		JLoader::register('JPluginHelper', JPATH_PLATFORM . '/cms/plugin/helper.php');
 
 		// Trigger the authentication plugins.
 		JPluginHelper::importPlugin('authentication');
@@ -305,6 +329,7 @@ class ApiApplicationWeb extends JApplicationWeb
 			{
 				// Look for services file.
 				$servicesFilename = $basePath . '/' . $fileName . '/services.json';
+
 				if (file_exists($servicesFilename))
 				{
 					$this->loadMaps(json_decode(file_get_contents($servicesFilename), true));
@@ -370,6 +395,38 @@ class ApiApplicationWeb extends JApplicationWeb
 		$this->mimeType = $this->getDocument()->getMimeEncoding();
 		$this->charSet  = $this->getDocument()->getCharset();
 
+		$body = $this->getBody();
+
+		// Check if the request is CORS ( Cross-origin resource sharing ) and change the body if true
+ 		$body = (string) $this->prepareBody($body);
+
+		$this->setBody($body);
+
 		parent::respond();
 	}
+
+	/**
+	 * Return the JSON message for CORS or simple request.
+	 *
+	 * @param   string	$message	The return message
+	 *
+	 * @return  string	$body	    The message prepared if CORS is enabled, or same if false.
+	 *
+	 * @since   1.0
+	 * @throws  InvalidArgumentException
+	 */
+	public function prepareBody($message)
+	{
+		$callback = $this->input->get->getString('callback', false);
+
+		if ($callback !== false)
+		{
+			$body = $callback . "(".$message.")";
+		}else{
+			$body = $message;
+		}
+
+		return $body;
+	}
+
 }
