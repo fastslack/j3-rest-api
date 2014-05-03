@@ -14,3 +14,13 @@ if (!class_exists('JLoader'))
 
 // Setup the autoloader for the application classes.
 JLoader::registerPrefix('Api', __DIR__);
+
+// Register the framework namespace
+JLoader::registerNamespace('Joomla', JPATH_PLATFORM . '/framework');
+
+JLoader::registerAlias('JRegistry',           '\\Joomla\\Registry\\Registry');
+JLoader::registerAlias('JRegistryFormat',     '\\Joomla\\Registry\\AbstractRegistryFormat');
+JLoader::registerAlias('JRegistryFormatINI',  '\\Joomla\\Registry\\Format\\Ini');
+JLoader::registerAlias('JRegistryFormatJSON', '\\Joomla\\Registry\\Format\\Json');
+JLoader::registerAlias('JRegistryFormatPHP',  '\\Joomla\\Registry\\Format\\Php');
+JLoader::registerAlias('JRegistryFormatXML',  '\\Joomla\\Registry\\Format\\Xml');
